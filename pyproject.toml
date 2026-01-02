@@ -6,6 +6,11 @@ authors = ["Your Name <your@email.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+pdfplumber = "*"
+numpy = "*"
+pillow = "*"
+pypdf = "*"
+pytesseract = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
