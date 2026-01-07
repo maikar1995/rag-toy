@@ -17,6 +17,7 @@ import json
 import logging
 import argparse
 import os
+import re
 import time
 import random
 from pathlib import Path
@@ -84,7 +85,7 @@ def load_azure_configs() -> Tuple[Dict[str, str], Dict[str, str], str]:
     }
     
     # Index name (try to get from configs or use default)
-    index_name = os.getenv('AZURE_SEARCH_INDEX_NAME', 'rag-toy-index-v1')
+    index_name = os.getenv('AZURE_SEARCH_INDEX_NAME', 'rag-toy-index-v2')
     
     # Validate required configs
     for name, config in [("OpenAI", openai_config), ("Search", search_config)]:
@@ -164,24 +165,37 @@ def generate_embeddings_batch(client: AzureOpenAI, texts: List[str], model_deplo
         f"Generate embeddings (batch size: {len(texts)})"
     )
 
+def clean_document_id(chunk_id: str) -> str:
+    """Clean the document ID to contain only allowed characters: letters, digits, underscore (_), dash (-), equal sign (=)."""
+    # Replace any character that is not a letter, digit, _, -, or = with an underscore
+    cleaned = re.sub(r'[^a-zA-Z0-9_\-=]', '_', chunk_id)
+    # Remove leading underscores if any
+    cleaned = cleaned.lstrip('_')
+    return cleaned
 
 def map_chunk_to_search_document(chunk: Dict[str, Any], embedding: List[float]) -> Dict[str, Any]:
     """Map chunk from JSONL to Azure Search document format."""
     metadata = chunk.get('metadata', {})
     
-    # Extract content_type from metadata or default to "text"
-    content_type = metadata.get('content_type', 'text')
+    # LIMPIAR ID: quitar underscores iniciales y caracteres problemáticos
+    clean_chunk_id = clean_document_id(chunk['chunk_id'])
     
-    return {
-        "id": chunk['chunk_id'],
+    document = {
+        "id": clean_chunk_id,
         "content": chunk['content'],
         "contentVector": embedding,
         "doc_id": chunk['doc_id'],
         "page": chunk.get('page'),
-        "content_type": content_type,
+        "content_type": metadata.get('content_type', 'text'),
         "source_path": metadata.get('source_path', ''),
         "doc_hash": metadata.get('doc_hash', '')
     }
+    
+    # ✅ AGREGAR ESTE DEBUG TEMPORAL
+    if len(document.get('contentVector', [])) > 0:
+        logging.debug(f"Document sample: id={document['id'][:20]}..., vector_dims={len(document['contentVector'])}")
+    
+    return document
 
 
 def upsert_documents_batch(search_client: SearchClient, documents: List[Dict[str, Any]]) -> Tuple[int, List[str]]:

@@ -192,6 +192,22 @@ def create_default_schema(index_name: str) -> Dict[str, Any]:
                     "algorithm": "default-hnsw"
                 }
             ]
+        },
+        "semantic": {
+            "configurations": [
+                {
+                    "name": "default",
+                    "prioritizedFields": {
+                        "titleField": None,
+                        "prioritizedContentFields": [
+                            {"fieldName": "content"}
+                        ],
+                        "prioritizedKeywordsFields": [
+                            {"fieldName": "doc_id"}
+                        ]
+                    }
+                }
+            ]
         }
     }
     
