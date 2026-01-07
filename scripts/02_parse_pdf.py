@@ -13,6 +13,7 @@ Usage:
     print(result['pages'])
 """
 
+import hashlib
 import logging
 import re
 import sys
@@ -122,7 +123,7 @@ class StandalonePDFParser:
         except Exception as e:
             logging.error(f"PDF parsing failed: {str(e)}")
             return {
-                "text": "",
+                "content": "",
                 "pages": [],
                 "metadata": {},
                 "boxes": [],
@@ -398,7 +399,7 @@ class StandalonePDFParser:
         metadata = self._extract_metadata()
 
         return {
-            "text": full_text,
+            "content": full_text,
             "pages": best_pages,
             "metadata": metadata,
             "boxes": getattr(self, "boxes", []),
@@ -524,6 +525,16 @@ def get_doc_id_from_filename(filepath: str) -> str:
     return Path(filepath).stem
 
 
+def get_pdf_hash(pdf_path: str) -> str:
+    """Calculate SHA256 hash of the entire PDF file."""
+    try:
+        with open(pdf_path, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()
+    except Exception as e:
+        logging.warning(f"Could not calculate hash for {pdf_path}: {e}")
+        return ""
+
+
 def find_pdf_files(input_path: str) -> List[str]:
     """Find all PDF files in input path (file or directory)."""
     input_path = Path(input_path)
@@ -546,7 +557,7 @@ def process_single_pdf(
     pdf_path: str, parser: StandalonePDFParser, doc_id: str = None
 ) -> List[Dict[str, Any]]:
     """
-    Process a single PDF and return list of page records.
+    Process a single PDF and return list of page records with enhanced metadata.
 
     Args:
         pdf_path: Path to PDF file
@@ -554,7 +565,7 @@ def process_single_pdf(
         doc_id: Custom document ID (optional, defaults to filename)
 
     Returns:
-        List of dicts with format: {"doc_id": str, "page": int, "text": str}
+        List of dicts with enhanced metadata structure
     """
     if doc_id is None:
         doc_id = get_doc_id_from_filename(pdf_path)
@@ -569,15 +580,25 @@ def process_single_pdf(
             logging.error(f"Error parsing {pdf_path}: {result['error']}")
             return []
 
-        # Extract pages
+        # Calculate PDF hash once
+        doc_hash = get_pdf_hash(pdf_path)
+
+        # Extract pages and metadata
         pages_text = result.get("pages", [])
+        pdf_metadata = result.get("metadata", {})
+        extraction_methods = result.get("extraction_methods", [])
+
         total_pages = len(pages_text)
 
         if total_pages == 0:
             logging.warning(f"No text extracted from {pdf_path}")
             return []
 
-        # Create page records
+        # Determine primary extraction method and fallback usage
+        primary_method = extraction_methods[0] if extraction_methods else "unknown"
+        used_fallback = len(extraction_methods) > 1
+
+        # Create page records with enhanced metadata
         page_records = []
         for page_num, page_text in enumerate(pages_text, 1):
             # Skip empty pages (optional - you might want to keep them)
@@ -585,10 +606,22 @@ def process_single_pdf(
                 logging.debug(f"Skipping empty page {page_num} in {doc_id}")
                 continue
 
+            # Enhanced metadata structure
+            metadata = {
+                "source_path": str(pdf_path),
+                "doc_hash": doc_hash,
+                "page_index": page_num,  # 1-indexed
+                "char_count": len(page_text.strip()),
+                "extraction_tool": primary_method,
+                "used_fallback": used_fallback,
+                "pdf_meta": pdf_metadata,
+            }
+
             page_record = {
                 "doc_id": doc_id,
-                "page": page_num,
-                "text": page_text.strip(),
+                "page": page_num,  # Keep for backward compatibility
+                "content": page_text.strip(),
+                "metadata": metadata,
             }
             page_records.append(page_record)
 
@@ -797,7 +830,7 @@ def validate_output_file(output_file: str):
                 record = json.loads(line.strip())
 
                 # Check required fields
-                required_fields = ["doc_id", "page", "text"]
+                required_fields = ["doc_id", "page", "content"]
                 for field in required_fields:
                     if field not in record:
                         print(f"Line {line_num}: Missing field '{field}'")
