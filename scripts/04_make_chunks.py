@@ -126,6 +126,13 @@ def create_chunks_from_page(
     chunk_data = smart_split_text(content, max_chars, overlap_chars)
 
     chunks = []
+
+    # Determinar source_uri
+    source_uri = original_metadata.get("source_path")
+    if not source_uri:
+        logging.warning(f"No se encontró 'source_path' en metadata para doc_id={doc_id}, page={page}. Se usará None en source_uri.")
+        source_uri = None
+
     for chunk_index, (chunk_text, start_pos, end_pos) in enumerate(chunk_data):
         chunk_id = f"{doc_id}_page_{page:03d}_chunk_{chunk_index:03d}"
 
@@ -142,6 +149,8 @@ def create_chunks_from_page(
             "doc_id": doc_id,
             "page": page,
             "chunk_index": chunk_index,
+            "content_type": "pdf",
+            "source_uri": source_uri,
             "content": chunk_text.strip(),
             "metadata": {
                 # Inherit original metadata
