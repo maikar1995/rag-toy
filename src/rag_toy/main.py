@@ -1,7 +1,6 @@
 # src/main.py
 from fastapi import FastAPI
-from .api.routers import users, items
+from .api.routers import rag
 
 app = FastAPI()
-app.include_router(users.router, prefix="/api/v1")
-app.include_router(items.router)
+app.include_router(rag.router, prefix="/api/v1")

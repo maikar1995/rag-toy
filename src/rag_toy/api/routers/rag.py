@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from api.deps import get_rag_service
-from rag.service import RAGService
-from rag_toy.rag import rag_query  # Tu servicio RAG con Azure AI Search
+from src.rag_toy.api.deps import get_rag_service
+from src.rag_toy.rag.service import RAGService
 
 router = APIRouter(prefix="/rag", tags=["RAG"])  # Prefix para /api/v1/rag/ask
 
