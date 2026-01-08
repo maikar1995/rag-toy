@@ -185,6 +185,7 @@ data/*.pkl
 data/raw/
 data/processed/
 data/external/
+data/chunks/
 
 # Model files
 models/*.pkl

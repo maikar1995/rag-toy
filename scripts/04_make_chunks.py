@@ -3,7 +3,7 @@
 Chunking Script - Process PDF pages into manageable chunks
 
 Input: data/processed/pdf_pages.jsonl (from 02_bis_parse_pdf.py)
-Output: data/processed/chunks.jsonl
+Output: data/chunks/chunks_pdf.jsonl
 
 Chunking strategy:
 - If page content <= ~6k chars: 1 chunk = 1 page
@@ -324,8 +324,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        default="data/processed/chunks.jsonl",
-        help="Output chunks file (default: data/processed/chunks.jsonl)",
+        default="data/chunks/chunks_pdf.jsonl",
+        help="Output chunks file (default: data/chunks/chunks_pdf.jsonl)",
     )
     parser.add_argument(
         "--max-chars",
