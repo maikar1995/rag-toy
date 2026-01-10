@@ -389,7 +389,9 @@ def main():
     search_client = create_search_client(search_config, index_name)
     model_deployment = openai_config['deployment'] or openai_config['model_name']
 
-    for file in chunks_files:
+    import concurrent.futures
+
+    def process_file(file):
         checkpoint_file = CHUNKS_DIR / f"{CHECKPOINT_PREFIX}{file.stem}.json"
         logging.info(f"\n=== Procesando archivo: {file.name} ===")
         try:
@@ -404,9 +406,17 @@ def main():
             )
         except Exception as e:
             logging.error(f"❌ Error procesando {file.name}: {e}")
-            continue
+
+    # Paraleliza la ingesta de archivos en batches
+    max_workers = min(4, len(chunks_files))  # Puedes ajustar el valor por defecto
+    batch_size = max_workers
+    batches = [chunks_files[i:i+batch_size] for i in range(0, len(chunks_files), batch_size)]
+    for batch in batches:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(process_file, file) for file in batch]
+            for future in concurrent.futures.as_completed(futures):
+                future.result()
     logging.info("✅ Proceso de upsert completado para todos los archivos.")
-    # TODO: parallelize by file/batch
     return 0
 
 if __name__ == "__main__":

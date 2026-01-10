@@ -58,22 +58,53 @@
       "facetable": true
     },
     {
-      "name": "source_path",
+      "name": "chunk_id",
       "type": "Edm.String",
       "searchable": false,
       "filterable": true,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false
+      "retrievable": true
+    },
+    {
+      "name": "source_uri",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true
+    },
+    {
+      "name": "emb_version",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true
     },
     {
       "name": "doc_hash",
       "type": "Edm.String",
       "searchable": false,
       "filterable": true,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false
+      "retrievable": true
+    },
+    {
+      "name": "ingested_at",
+      "type": "Edm.DateTimeOffset",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true
+    },
+    {
+      "name": "fetched_at",
+      "type": "Edm.DateTimeOffset",
+      "searchable": false,
+      "filterable": false,
+      "retrievable": true
+    },
+    {
+      "name": "chunk_method",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true
     }
   ],
   "vectorSearch": {
@@ -99,14 +130,18 @@
   "semantic": {
     "configurations": [
       {
-        "name": "default-semantic-config",
+        "name": "default",
         "prioritizedFields": {
           "titleField": null,
           "prioritizedContentFields": [
-            {"fieldName": "content"}
+            {
+              "fieldName": "content"
+            }
           ],
           "prioritizedKeywordsFields": [
-            {"fieldName": "doc_id"}
+            {
+              "fieldName": "doc_id"
+            }
           ]
         }
       }

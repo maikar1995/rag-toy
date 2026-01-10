@@ -94,84 +94,23 @@ def get_embedding_dimensions() -> int:
 def create_default_schema(index_name: str) -> Dict[str, Any]:
     """Create default search index schema."""
     embedding_dims = get_embedding_dimensions()
-    
+
     schema = {
         "name": index_name,
         "fields": [
-            {
-                "name": "id",
-                "type": "Edm.String",
-                "key": True,
-                "searchable": False,
-                "filterable": False,
-                "retrievable": True
-            },
-            {
-                "name": "content",
-                "type": "Edm.String",
-                "searchable": True,
-                "filterable": False,
-                "retrievable": True,
-                "sortable": False,
-                "facetable": False,
-                "analyzer": "es.microsoft"
-            },
-            {
-                "name": "contentVector",
-                "type": "Collection(Edm.Single)",
-                "searchable": True,
-                "filterable": False,
-                "retrievable": True,
-                "sortable": False,
-                "facetable": False,
-                "dimensions": embedding_dims,  # ✅ Changed from vectorSearchDimensions
-                "vectorSearchProfile": "default-vector-profile"  # ✅ Changed from vectorSearchProfileName
-            },
-            {
-                "name": "doc_id",
-                "type": "Edm.String",
-                "searchable": False,
-                "filterable": True,
-                "retrievable": True,
-                "sortable": True,
-                "facetable": True
-            },
-            {
-                "name": "page",
-                "type": "Edm.Int32",
-                "searchable": False,
-                "filterable": True,
-                "retrievable": True,
-                "sortable": True,
-                "facetable": True
-            },
-            {
-                "name": "content_type",
-                "type": "Edm.String",
-                "searchable": False,
-                "filterable": True,
-                "retrievable": True,
-                "sortable": False,
-                "facetable": True
-            },
-            {
-                "name": "source_path",
-                "type": "Edm.String",
-                "searchable": False,
-                "filterable": True,
-                "retrievable": True,
-                "sortable": False,
-                "facetable": False
-            },
-            {
-                "name": "doc_hash",
-                "type": "Edm.String",
-                "searchable": False,
-                "filterable": True,
-                "retrievable": True,
-                "sortable": False,
-                "facetable": False
-            }
+            {"name": "id", "type": "Edm.String", "key": True, "searchable": False, "filterable": False, "retrievable": True},
+            {"name": "content", "type": "Edm.String", "searchable": True, "filterable": False, "retrievable": True, "sortable": False, "facetable": False, "analyzer": "es.microsoft"},
+            {"name": "contentVector", "type": "Collection(Edm.Single)", "searchable": True, "filterable": False, "retrievable": True, "sortable": False, "facetable": False, "dimensions": embedding_dims, "vectorSearchProfile": "default-vector-profile"},
+            {"name": "doc_id", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True, "sortable": True, "facetable": True},
+            {"name": "page", "type": "Edm.Int32", "searchable": False, "filterable": True, "retrievable": True, "sortable": True, "facetable": True},
+            {"name": "content_type", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True, "sortable": False, "facetable": True},
+            {"name": "chunk_id", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True},
+            {"name": "source_uri", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True},
+            {"name": "emb_version", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True},
+            {"name": "doc_hash", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True},
+            {"name": "ingested_at", "type": "Edm.DateTimeOffset", "searchable": False, "filterable": False, "retrievable": True},
+            {"name": "fetched_at", "type": "Edm.DateTimeOffset", "searchable": False, "filterable": False, "retrievable": True},
+            {"name": "chunk_method", "type": "Edm.String", "searchable": False, "filterable": True, "retrievable": True}
         ],
         "vectorSearch": {
             "algorithms": [
@@ -210,7 +149,6 @@ def create_default_schema(index_name: str) -> Dict[str, Any]:
             ]
         }
     }
-    
     return schema
 
 
