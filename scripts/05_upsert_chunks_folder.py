@@ -126,7 +126,7 @@ def clean_document_id(chunk_id: str) -> str:
     return cleaned
 
 def map_chunk_to_search_document(chunk: Dict[str, Any], embedding: List[float]) -> Dict[str, Any]:
-    # Usa los campos del chunk directamente
+    # Usa los campos del chunk directamente, sin metadata anidado
     clean_chunk_id = clean_document_id(chunk['chunk_id'])
     document = {
         "id": clean_chunk_id,
@@ -135,8 +135,13 @@ def map_chunk_to_search_document(chunk: Dict[str, Any], embedding: List[float]) 
         "doc_id": chunk['doc_id'],
         "page": chunk.get('page'),
         "content_type": chunk.get('content_type', 'text'),
+        "chunk_id": chunk.get('chunk_id'),
         "source_uri": chunk.get('source_uri', ''),
-        "metadata": chunk.get('metadata', {})
+        "emb_version": chunk.get('emb_version'),
+        "doc_hash": chunk.get('doc_hash'),
+        "ingested_at": chunk.get('ingested_at'),
+        "fetched_at": chunk.get('fetched_at'),
+        "chunk_method": chunk.get('chunk_method')
     }
     return document
 
