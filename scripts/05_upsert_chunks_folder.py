@@ -162,7 +162,8 @@ def upsert_documents_batch(search_client: SearchClient, documents: List[Dict[str
                 successful_count += 1
             else:
                 failed_ids.append(result.key)
-                logging.error(f"Failed to upsert document {result.key}: {result.error_message}")
+                # Log completo para depuración
+                logging.error(f"Failed to upsert document {result.key}: {getattr(result, 'error_message', None)} | Raw result: {result.__dict__ if hasattr(result, '__dict__') else str(result)}")
         return successful_count, failed_ids
     except Exception as e:
         failed_ids = [doc['id'] for doc in documents]
