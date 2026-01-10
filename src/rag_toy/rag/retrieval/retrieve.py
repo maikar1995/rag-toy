@@ -28,7 +28,7 @@ class SearchResult:
     score: float
     doc_id: str
     page: Optional[int]
-    source_path: str
+    source_uri: str
     content_type: str
     search_type: str
     
@@ -40,7 +40,7 @@ class SearchResult:
             "score": self.score,
             "doc_id": self.doc_id,
             "page": self.page,
-            "source_path": self.source_path,
+            "source_uri": self.source_uri,
             "content_type": self.content_type,
             "search_type": self.search_type
         }
@@ -184,7 +184,7 @@ class Retriever:
                     score=result.get('@search.score', 0.0),
                     doc_id=result.get('doc_id', ''),
                     page=result.get('page'),
-                    source_path=result.get('source_path', ''),
+                    source_uri=result.get('source_uri', ''),
                     content_type=result.get('content_type', 'text'),
                     search_type=search_type
                 )
@@ -274,7 +274,7 @@ class Retriever:
         search_results = self.search_client.search(
             search_text="",
             vector_queries=[vector_query],
-            select=["id", "content", "doc_id", "page", "source_path", "content_type"],
+            select=["id", "content", "doc_id", "page", "source_uri", "content_type"],
             filter=odata_filter,
             top=top_k
         )
@@ -299,11 +299,11 @@ class Retriever:
         search_results = self.search_client.search(
             search_text=query_text,
             vector_queries=[vector_query],
-            select=["id", "content", "doc_id", "page", "source_path", "content_type"],
+            select=["id", "content", "doc_id", "page", "source_uri", "content_type"],
             filter=odata_filter,
             top=top_k,
             query_type="semantic",  # Enable semantic search for better keyword matching
-            semantic_configuration_name="default-semantic-config"
+            semantic_configuration_name="default"
         )
         
         return list(search_results)
