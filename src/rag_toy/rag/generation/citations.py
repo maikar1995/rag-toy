@@ -9,8 +9,8 @@ def validate_citations_hard_fail(answer: AnswerResponse, used_citations: List[Ci
     Validates that every citation (evidence.chunk_id) in the answer exists in the used_chunks.
     If any citation is missing, abstain (return None) or retry once if retry_fn is provided.
     """
-    chunk_ids: Set[str] = {ev.chunk_id for ev in used_citations}
-    missing = [ev.chunk_id for ev in answer.citations if ev.chunk_id not in chunk_ids]
+    chunk_ids: Set[str] = {citation.chunk_id for citation in used_citations}
+    missing = [citation.chunk_id for citation in answer.citations if citation.chunk_id not in chunk_ids]
     if not missing:
         return answer
     logger.warning(f"Citations missing from used chunks: {missing}")
@@ -18,7 +18,7 @@ def validate_citations_hard_fail(answer: AnswerResponse, used_citations: List[Ci
         logger.info("Retrying answer generation due to missing citations...")
         retry_answer = retry_fn()
         # Prevent infinite retry loop: only retry once
-        missing_retry = [ev.chunk_id for ev in retry_answer.citations if ev.chunk_id not in chunk_ids]
+        missing_retry = [citation.chunk_id for citation in retry_answer.citations if citation.chunk_id not in chunk_ids]
         if not missing_retry:
             return retry_answer
         logger.error(f"Citations still missing after retry: {missing_retry}. Abstaining.")

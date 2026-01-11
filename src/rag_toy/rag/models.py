@@ -6,11 +6,22 @@ from dataclasses import dataclass, asdict
 from typing import List, Optional, Dict, Any
 
 class Document(BaseModel):
-    id: str
+    id: str  # doc_id for consistency
     source: str
     title: Optional[str] = None
     url: Optional[str] = None
-    # Add other document-level fields as needed
+    
+    # Required fields for chunking/indexing pipeline
+    content: Optional[str] = None
+    content_type: Optional[str] = None  # pdf_page, web_doc, etc.
+    source_uri: Optional[str] = None
+    page: Optional[int] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    
+    @property
+    def doc_id(self) -> str:
+        """Alias for id to match Azure Search and chunk naming."""
+        return self.id
 
 class Chunk(BaseModel):
     id: str
@@ -20,6 +31,9 @@ class Chunk(BaseModel):
     embedding: Optional[List[float]] = None
     source: Optional[str] = None
     url: Optional[str] = None
+    page: Optional[int] = None
+    content_type: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
     # Add other flat fields as needed
 
 
@@ -33,21 +47,20 @@ class AbstractionReason(Enum):
     GENERATION_ERROR = "generation_error"
 
 
-@dataclass
-class Citation:
+class Citation(BaseModel):
     """Citation reference to a specific chunk."""
     chunk_id: str
     doc_id: str
-    page: Optional[int]
-    relevance: float
+    page: Optional[int] = None
+    relevance: float = 1.0
 
 
-@dataclass
-class AnswerResponse:
+class AnswerResponse(BaseModel):
     """Complete answer response with metadata."""
-    answer: Optional[str]
-    citations: List[Citation]
-    confidence: float
+    answer: Optional[str] = None
+    citations: List[Citation] = Field(default_factory=list)
+    confidence: float = 0.0
+    abstain_reason: Optional[AbstractionReason] = None
     notes: Dict[str, Any]
     
     def to_dict(self) -> Dict[str, Any]:
