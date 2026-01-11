@@ -108,11 +108,14 @@ class IngestionOrchestrator:
         
         # Derive index name
         index_name = f"rag-toy-{chunk_engine}-v1"
-        logger.info(f"Starting ingestion pipeline with engine '{chunk_engine}' → index '{index_name}'")
+        logger.info(f"🚀 Starting ingestion pipeline: engine='{chunk_engine}', index='{index_name}'")
+        logger.info(f"📁 Data paths: {data_paths}")
+        logger.info(f"⚙️  Chunker kwargs: {chunker_kwargs}")
         
         # Validate inputs
         validation_errors = self._validate_inputs(data_paths, chunk_engine)
         if validation_errors:
+            logger.error(f"❌ Validation failed: {validation_errors}")
             return IngestionSummary(
                 success=False,
                 total_documents=0,
@@ -136,7 +139,7 @@ class IngestionOrchestrator:
         try:
             # Stream processing: Documents → Chunks → Indexing
             for source_type, file_path in data_paths.items():
-                logger.info(f"Processing {source_type} documents from {file_path}")
+                logger.info(f"📄 Processing {source_type} documents from {file_path}")
                 
                 # Load documents
                 try:
@@ -149,17 +152,24 @@ class IngestionOrchestrator:
                         doc_type=source_type,
                         **chunker_kwargs
                     )
+                    logger.info(f"🔧 Using chunker: {type(chunker).__name__} for {source_type}")
                     
                     # Stream processing
+                    doc_count_in_source = 0
                     for doc in documents:
                         total_documents += 1
+                        doc_count_in_source += 1
                         
                         try:
+                            logger.debug(f"🔍 Processing document: {doc.id} (source: {source_type})")
+                            
                             # Generate chunks
                             chunks = list(chunker.chunk(doc))
                             total_chunks += len(chunks)
                             
                             if chunks:
+                                logger.debug(f"✂️  Generated {len(chunks)} chunks for {doc.id}")
+                                
                                 # Index chunks
                                 result = self.indexing_service.index_chunks(
                                     chunks=chunks
@@ -168,18 +178,36 @@ class IngestionOrchestrator:
                                 indexed_chunks += result.upserted_chunks
                                 failed_chunks += result.failed_chunks
                                 
+                                # Log indexing results
+                                if result.failed_chunks > 0:
+                                    logger.warning(f"⚠️  Document {doc.id}: {result.upserted_chunks} indexed, {result.failed_chunks} failed")
+                                else:
+                                    logger.debug(f"✅ Document {doc.id}: {result.upserted_chunks} chunks indexed successfully")
+                                
                                 if result.errors:
+                                    for error in result.errors:
+                                        logger.error(f"🔥 Indexing error for {doc.id}: {error}")
                                     errors.extend(result.errors)
-                            
+                            else:
+                                logger.warning(f"⚠️  No chunks generated for document {doc.id} (source: {source_type})")
+                        
                         except Exception as e:
-                            error_msg = f"Failed to process document {doc.doc_id}: {e}"
-                            logger.error(error_msg)
+                            error_msg = f"Failed to process document {doc.id} (source: {source_type}): {e}"
+                            logger.error(f"❌ {error_msg}")
+                            logger.debug(f"💥 Document processing stacktrace:", exc_info=True)
                             errors.append(error_msg)
                             failed_chunks += 1
                         
+                        # Progress logging for large datasets
+                        if doc_count_in_source % 100 == 0:
+                            logger.info(f"📈 Progress {source_type}: {doc_count_in_source} documents processed...")
+                    
+                    logger.info(f"✅ Completed {source_type}: {doc_count_in_source} documents processed")
+                        
                 except Exception as e:
                     error_msg = f"Failed to load {source_type} from {file_path}: {e}"
-                    logger.error(error_msg)
+                    logger.error(f"❌ {error_msg}")
+                    logger.debug(f"💥 Source loading stacktrace:", exc_info=True)
                     errors.append(error_msg)
             
             processing_time = time.time() - start_time
@@ -198,16 +226,35 @@ class IngestionOrchestrator:
                 timestamp=datetime.now()
             )
             
-            # Log summary
-            logger.info(f"Ingestion completed: {total_documents} docs → {total_chunks} chunks → {indexed_chunks} indexed (failures: {failed_chunks})")
-            if not success:
-                logger.warning(f"Ingestion had {len(errors)} errors")
+            # Enhanced final logging
+            logger.info("=" * 60)
+            logger.info("📊 INGESTION SUMMARY")
+            logger.info(f"⏱️  Processing time: {processing_time:.2f}s")
+            logger.info(f"📄 Documents processed: {total_documents}")
+            logger.info(f"✂️  Total chunks generated: {total_chunks}")
+            logger.info(f"💾 Chunks indexed: {indexed_chunks}")
+            if failed_chunks > 0:
+                logger.error(f"❌ Failed chunks: {failed_chunks}")
+            if errors:
+                logger.error(f"🔥 Total errors: {len(errors)}")
+                logger.error("First 3 errors:")
+                for i, error in enumerate(errors[:3], 1):
+                    logger.error(f"  {i}. {error}")
+                if len(errors) > 3:
+                    logger.error(f"  ... and {len(errors) - 3} more errors")
+            
+            if success:
+                logger.info("🎉 Ingestion completed successfully!")
+            else:
+                logger.warning("⚠️  Ingestion completed with errors")
+            logger.info("=" * 60)
             
             return summary
             
         except Exception as e:
             error_msg = f"Critical ingestion failure: {e}"
-            logger.error(error_msg)
+            logger.error(f"💥 {error_msg}")
+            logger.error("💀 Critical failure stacktrace:", exc_info=True)
             
             return IngestionSummary(
                 success=False,
@@ -230,6 +277,17 @@ class IngestionOrchestrator:
         supported_engines = {"native", "langchain", "llamaindex"}
         if chunk_engine not in supported_engines:
             errors.append(f"Unsupported chunk engine: {chunk_engine}. Supported: {sorted(supported_engines)}")
+        
+        # Validate chunker creation for each source type
+        if chunk_engine in supported_engines:
+            try:
+                for source_type in data_paths.keys():
+                    try:
+                        get_chunker(engine=chunk_engine, doc_type=source_type)
+                    except Exception as e:
+                        errors.append(f"Cannot create {chunk_engine} chunker for {source_type}: {e}")
+            except Exception as e:
+                errors.append(f"Chunker validation failed: {e}")
         
         # Validate data paths
         if not data_paths:

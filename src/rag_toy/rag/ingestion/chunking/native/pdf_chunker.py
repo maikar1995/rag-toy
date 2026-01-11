@@ -42,33 +42,27 @@ class NativePDFChunker(Chunker):
         if not content:
             return []
             
-        # For PDF documents, we expect the content to potentially be page-structured
-        # If the document content is a single string, treat it as one "page"
-        pages = self._extract_pages(document)
+        # For PDF documents from JSONL, each document represents a single page
+        # Use the actual page number from the document metadata
+        actual_page_num = getattr(document, 'page', 1)
         
-        chunks = []
-        for page_num, page_content in enumerate(pages):
-            if not page_content.strip():
-                continue
-                
-            page_chunks = self._chunk_page(
-                document=document,
-                page_num=page_num + 1,  # 1-indexed
-                page_content=page_content,
-                config=chunk_config
-            )
-            chunks.extend(page_chunks)
-            
-        return chunks
+        page_chunks = self._chunk_page(
+            document=document,
+            page_num=actual_page_num,  # Use actual page number
+            page_content=content,
+            config=chunk_config
+        )
+        
+        return page_chunks
     
     def _extract_pages(self, document: Document) -> List[str]:
         """
         Extract pages from document content.
         
-        This is a simple implementation that treats the entire content as one page.
-        In a real system, this might parse actual PDF page boundaries.
+        For PDF documents that come from JSONL with page structure,
+        each document represents a single page.
         """
-        # Simple implementation - treat entire content as one page
+        # Each document in PDF JSONL represents a single page
         content = getattr(document, 'content', None)
         if content:
             return [content]

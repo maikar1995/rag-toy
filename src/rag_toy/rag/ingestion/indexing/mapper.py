@@ -1,7 +1,8 @@
 """Chunk to Azure Search document mapping."""
 
 import re
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Dict, Any, List, Optional
 
 from ...models import Chunk
 
@@ -13,6 +14,42 @@ class ChunkMapper:
     This boundary abstraction allows the search schema to evolve
     independently from the chunk model.
     """
+    
+    @staticmethod
+    def _format_datetime_for_search(value: Any) -> Optional[str]:
+        """
+        Format datetime value for Azure Search Edm.DateTimeOffset compatibility.
+        
+        Azure Search requires ISO 8601 format with timezone (RFC 3339).
+        
+        Args:
+            value: Datetime value (string, datetime object, or None)
+            
+        Returns:
+            Formatted datetime string or None
+        """
+        if value is None:
+            return None
+            
+        if isinstance(value, str):
+            try:
+                # Try to parse existing string
+                dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                return None
+        elif isinstance(value, datetime):
+            dt = value
+        else:
+            return None
+        
+        # Ensure UTC timezone and format as ISO 8601 with 'Z' suffix
+        if dt.tzinfo is None:
+            # Assume UTC if no timezone
+            return dt.isoformat() + 'Z'
+        else:
+            # Convert to UTC and format
+            utc_dt = dt.utctimetuple()
+            return datetime(*utc_dt[:6]).isoformat() + 'Z'
     
     @staticmethod
     def clean_document_id(chunk_id: str) -> str:
@@ -62,8 +99,8 @@ class ChunkMapper:
             document.update({
                 "emb_version": metadata.get('emb_version'),
                 "doc_hash": metadata.get('doc_hash'),
-                "ingested_at": metadata.get('ingested_at'),
-                "fetched_at": metadata.get('fetched_at'),
+                "ingested_at": ChunkMapper._format_datetime_for_search(metadata.get('ingested_at')),
+                "fetched_at": ChunkMapper._format_datetime_for_search(metadata.get('fetched_at')),
                 "chunk_method": metadata.get('chunk_method')
             })
         
