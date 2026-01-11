@@ -36,6 +36,7 @@ class WebLoader:
         Yields:
             Document objects with content_type="web_doc"
         """
+        file_path = Path(file_path)
         if not file_path.exists():
             raise FileNotFoundError(f"Web JSONL file not found: {file_path}")
         

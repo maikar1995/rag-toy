@@ -48,3 +48,17 @@ class IndexingResult(BaseModel):
             f"Indexed {self.upserted_chunks}/{self.total_chunks} chunks "
             f"({self.success_rate:.1f}% success) in {self.processing_time_seconds:.2f}s"
         )
+
+
+class IngestionSummary(BaseModel):
+    """Summary of complete ingestion pipeline execution."""
+    success: bool
+    total_documents: int
+    total_chunks: int
+    indexed_chunks: int
+    failed_chunks: int
+    errors: List[str] = []
+    chunk_engine: str
+    index_name: str
+    processing_time: float
+    timestamp: datetime

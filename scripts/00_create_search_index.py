@@ -255,8 +255,8 @@ def main():
     parser = argparse.ArgumentParser(description="Create Azure AI Search index")
     parser.add_argument(
         '--index-name',
-        default='rag-toy-index-v1',
-        help='Name of the search index (default: rag-toy-index-v1)'
+        default='rag-toy-native-v1',
+        help='Name of the search index (default: rag-toy-native-v1)'
     )
     parser.add_argument(
         '--schema-file',

@@ -34,7 +34,7 @@ class IndexingService:
         self,
         openai_client: AzureOpenAI,
         search_client: SearchClient,
-        model_deployment: str,
+        embedding_model: str,
         embed_batch_size: int = EMBED_BATCH_SIZE,
         upsert_batch_size: int = UPSERT_BATCH_SIZE
     ):
@@ -44,13 +44,13 @@ class IndexingService:
         Args:
             openai_client: Azure OpenAI client for embeddings
             search_client: Azure Search client for indexing
-            model_deployment: Model deployment name for embeddings
+            embedding_model: Model deployment name for embeddings
             embed_batch_size: Batch size for embedding generation
             upsert_batch_size: Batch size for search upsert
         """
         self.openai_client = openai_client
         self.search_client = search_client
-        self.model_deployment = model_deployment
+        self.embedding_model = embedding_model
         self.embed_batch_size = embed_batch_size
         self.upsert_batch_size = upsert_batch_size
         self.mapper = ChunkMapper()
@@ -172,7 +172,7 @@ class IndexingService:
         """
         def _generate():
             response = self.openai_client.embeddings.create(
-                model=self.model_deployment,
+                model=self.embedding_model,
                 input=texts
             )
             return [embedding.embedding for embedding in response.data]

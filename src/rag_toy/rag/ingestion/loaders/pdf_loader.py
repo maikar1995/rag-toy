@@ -35,6 +35,7 @@ class PDFLoader:
         Yields:
             Document objects with content_type="pdf_page"
         """
+        file_path = Path(file_path)
         if not file_path.exists():
             raise FileNotFoundError(f"PDF JSONL file not found: {file_path}")
         
