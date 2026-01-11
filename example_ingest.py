@@ -13,14 +13,15 @@ def main():
     
     # Data paths for JSONL files
     data_paths = {
-        "pdf": "data/processed/pdf_pages.jsonl",
-        "web": "data/processed/web_docs.jsonl"
+        # "pdf": "data/processed/pdf_pages.jsonl",
+        # "web": "data/processed/web_docs.jsonl",
+        "pdf_book": "data/input/_OceanofPDF.com_The_Minto_Pyramid_Principle_-_Barbara_Minto.pdf"
     }
     
     # Run ingestion with environment config
     summary = run_ingestion_with_env(
         data_paths=data_paths,
-        chunk_engine="native"  # or "langchain", "llamaindex"
+        chunk_engine="llamaindex"  # or "langchain", "llamaindex"
     )
     
     # Print results

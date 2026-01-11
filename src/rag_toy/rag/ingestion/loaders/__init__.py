@@ -2,12 +2,15 @@
 
 from .base import DocumentLoader
 from .pdf_loader import PDFLoader
+
 from .web_loader import WebLoader
+from .pdf_book_loader import PDFBookLoader
 
 # Registry of available loaders
 _LOADERS = {
     "pdf": PDFLoader,
-    "web": WebLoader
+    "web": WebLoader,
+    "pdf_book": PDFBookLoader
 }
 
 
@@ -34,7 +37,8 @@ def get_loader(source_type: str) -> DocumentLoader:
 
 __all__ = [
     "DocumentLoader",
-    "PDFLoader", 
+    "PDFLoader",
     "WebLoader",
+    "PDFBookLoader",
     "get_loader"
 ]
