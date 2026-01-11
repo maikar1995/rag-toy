@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
+from enum import Enum
+from dataclasses import dataclass, asdict
+from typing import List, Optional, Dict, Any
+
 class Document(BaseModel):
     id: str
     source: str
@@ -19,36 +23,38 @@ class Chunk(BaseModel):
     # Add other flat fields as needed
 
 
-class Evidence(BaseModel):
+
+class AbstractionReason(Enum):
+    """Reasons for abstaining from answering."""
+    NO_CHUNKS = "no_chunks_provided"
+    NO_CITATIONS = "no_valid_citations" 
+    OUTSIDE_CONTEXT = "response_outside_context"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    GENERATION_ERROR = "generation_error"
+
+
+@dataclass
+class Citation:
+    """Citation reference to a specific chunk."""
     chunk_id: str
-    text: str
-    score: Optional[float] = None
-    # Add other evidence fields as needed
-
-    @classmethod
-    def from_search_hit(cls, hit: dict) -> "Evidence":
-        """
-        Build an Evidence instance from a search result dict (e.g., Azure Cognitive Search hit).
-        """
-        return cls(
-            chunk_id=hit.get("chunk_id") or hit.get("id"),
-            text=hit.get("text"),
-            score=hit.get("score"),
-        )
+    doc_id: str
+    page: Optional[int]
+    relevance: float
 
 
-class AnswerResponse(BaseModel):
-    answer: str
-    evidences: List[Evidence]
-    # Add other response fields as needed
-
-    @classmethod
-    def from_llm_json(cls, data: dict) -> "AnswerResponse":
-        """
-        Build an AnswerResponse from a dict (e.g., LLM output or API response).
-        """
-        evidences = [Evidence(**ev) if not isinstance(ev, Evidence) else ev for ev in data.get("evidences", [])]
-        return cls(
-            answer=data.get("answer", ""),
-            evidences=evidences,
-        )
+@dataclass
+class AnswerResponse:
+    """Complete answer response with metadata."""
+    answer: Optional[str]
+    citations: List[Citation]
+    confidence: float
+    notes: Dict[str, Any]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary format."""
+        return {
+            "answer": self.answer,
+            "citations": [asdict(citation) for citation in self.citations],
+            "confidence": self.confidence,
+            "notes": self.notes
+        }

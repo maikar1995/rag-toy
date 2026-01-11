@@ -16,6 +16,8 @@ from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.models import VectorizedQuery
 
+from rag_toy.rag.interfaces import Retriever
+
 # Load environment variables
 load_dotenv()
 
@@ -195,7 +197,7 @@ class Retriever:
         
         return parsed_results
     
-    def search(
+    def retrieve(
         self,
         query: str,
         *,
@@ -323,7 +325,7 @@ class Retriever:
         Returns:
             List of result dictionaries
         """
-        results = self.search(query, **kwargs)
+        results = self.retrieve(query, **kwargs)
         return [result.to_dict() for result in results]
 
 
@@ -362,15 +364,15 @@ if __name__ == "__main__":
     query = "What is the Minto Pyramid Principle?"
     
     # Vector search
-    vector_results = retriever.search(query, search_type="vector", top_k=3)
+    vector_results = retriever.retrieve(query, search_type="vector", top_k=3)
     print(f"Vector search found {len(vector_results)} results")
     
     # Hybrid search  
-    hybrid_results = retriever.search(query, search_type="hybrid", top_k=3)
+    hybrid_results = retriever.retrieve(query, search_type="hybrid", top_k=3)
     print(f"Hybrid search found {len(hybrid_results)} results")
     
     # Search with filters
-    filtered_results = retriever.search(
+    filtered_results = retriever.retrieve(
         query,
         filters={"doc_id": "specific_document", "page": [1, 2, 3]},
         top_k=5

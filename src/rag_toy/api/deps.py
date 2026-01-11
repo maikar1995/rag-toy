@@ -42,4 +42,4 @@ def get_rag_service() -> RAGService:
         model_deployment=os.environ["LLM_MODEL_NAME"],
     )
 
-    return RAGService(retriever=retriever, generator=generator)
+    return RAGService(retriever=retriever, answer_generator=generator)
