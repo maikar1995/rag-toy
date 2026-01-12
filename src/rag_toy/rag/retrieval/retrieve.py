@@ -33,10 +33,14 @@ class SearchResult:
     source_uri: str
     content_type: str
     search_type: str
+    # Hierarchical fields (optional for backward compatibility)
+    node_id: Optional[str] = None
+    node_type: Optional[str] = None
+    parent_path: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary format."""
-        return {
+        result = {
             "chunk_id": self.chunk_id,
             "content": self.content,
             "score": self.score,
@@ -46,6 +50,16 @@ class SearchResult:
             "content_type": self.content_type,
             "search_type": self.search_type
         }
+        
+        # Add hierarchical fields if present
+        if self.node_id is not None:
+            result["node_id"] = self.node_id
+        if self.node_type is not None:
+            result["node_type"] = self.node_type
+        if self.parent_path is not None:
+            result["parent_path"] = self.parent_path
+            
+        return result
 
 
 class Retriever:
@@ -188,7 +202,10 @@ class Retriever:
                     page=result.get('page'),
                     source_uri=result.get('source_uri', ''),
                     content_type=result.get('content_type', 'text'),
-                    search_type=search_type
+                    search_type=search_type,
+                    node_id=result.get('node_id'),
+                    node_type=result.get('node_type'),
+                    parent_path=result.get('parent_path')
                 )
                 parsed_results.append(search_result)
             except Exception as e:
@@ -276,7 +293,7 @@ class Retriever:
         search_results = self.search_client.search(
             search_text="",
             vector_queries=[vector_query],
-            select=["id", "content", "doc_id", "page", "source_uri", "content_type"],
+            select=["id", "content", "doc_id", "page", "source_uri", "content_type", "node_id", "node_type", "parent_path"],
             filter=odata_filter,
             top=top_k
         )
@@ -301,7 +318,7 @@ class Retriever:
         search_results = self.search_client.search(
             search_text=query_text,
             vector_queries=[vector_query],
-            select=["id", "content", "doc_id", "page", "source_uri", "content_type"],
+            select=["id", "content", "doc_id", "page", "source_uri", "content_type", "node_id", "node_type", "parent_path"],
             filter=odata_filter,
             top=top_k,
             query_type="semantic",  # Enable semantic search for better keyword matching

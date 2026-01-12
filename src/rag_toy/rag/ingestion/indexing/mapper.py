@@ -103,5 +103,16 @@ class ChunkMapper:
                 "fetched_at": ChunkMapper._format_datetime_for_search(metadata.get('fetched_at')),
                 "chunk_method": metadata.get('chunk_method')
             })
+            
+            # Add hierarchical fields if present (for LlamaIndex chunker)
+            from rag_toy.rag.retrieval.hierarchical_utils import serialize_parent_path
+            if 'parent_ids' in metadata and metadata['parent_ids']:
+                document["parent_path"] = serialize_parent_path(metadata['parent_ids'])
+            if 'node_id' in metadata and metadata['node_id']:
+                document["node_id"] = metadata['node_id']
+            # Determine node_type based on chunk method and presence of children
+            if metadata.get('chunk_method') == 'llamaindex_hierarchical':
+                # For hierarchical chunks, assume they are leaves unless specified otherwise
+                document["node_type"] = metadata.get('node_type', 'chunk')
         
         return document
