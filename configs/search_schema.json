@@ -1,5 +1,5 @@
 {
-  "name": "rag-toy-index-v1",
+  "name": "rag-toy-llamaindex-v1",
   "fields": [
     {
       "name": "id",

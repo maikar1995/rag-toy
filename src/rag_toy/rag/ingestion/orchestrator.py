@@ -19,7 +19,7 @@ from openai import AzureOpenAI
 
 from ..models import Document, Chunk
 from .loaders import get_loader
-from .chunking import get_chunker
+from .chunking import get_chunker, ChunkerConfig
 from .indexing.service import IndexingService
 from .indexing.models import IngestionSummary
 
@@ -283,7 +283,7 @@ class IngestionOrchestrator:
             try:
                 for source_type in data_paths.keys():
                     try:
-                        get_chunker(engine=chunk_engine, doc_type=source_type)
+                        get_chunker(engine=chunk_engine, doc_type=source_type, config=ChunkerConfig())
                     except Exception as e:
                         errors.append(f"Cannot create {chunk_engine} chunker for {source_type}: {e}")
             except Exception as e:
@@ -295,7 +295,7 @@ class IngestionOrchestrator:
         
         for source_type, file_path in data_paths.items():
             # Check if source type is supported
-            supported_sources = {"pdf", "web"}
+            supported_sources = {"pdf", "web", "pdf_book"}
             if source_type not in supported_sources:
                 errors.append(f"Unsupported source type: {source_type}. Supported: {sorted(supported_sources)}")
             

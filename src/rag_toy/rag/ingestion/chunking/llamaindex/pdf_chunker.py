@@ -16,7 +16,7 @@ class LlamaIndexPDFChunker(Chunker):
     Chunker for PDFBookLoader using LlamaIndex HierarchicalNodeParser.
     """
     def __init__(self, chunk_sizes: Optional[List[int]] = None, chunk_overlap: int = 20, **kwargs):
-        self.chunk_sizes = chunk_sizes or [2048, 512, 128]
+        self.chunk_sizes = chunk_sizes or [2048, 1024, 512]
         self.chunk_overlap = chunk_overlap
         self.node_parser = HierarchicalNodeParser.from_defaults(
             chunk_sizes=self.chunk_sizes,
@@ -30,13 +30,14 @@ class LlamaIndexPDFChunker(Chunker):
             metadata=doc.metadata or {}
         )
         nodes = self.node_parser.get_nodes_from_documents([llama_doc])
-        for node in nodes:
+        for chunk_index, node in enumerate(nodes):
             # Compose our domain Chunk
             chunk_id = str(uuid.uuid4())
             yield Chunk(
                 id=chunk_id,
                 document_id=getattr(doc, 'doc_id', None) or doc.metadata.get('doc_id') or chunk_id,
                 text=node.text,
+                chunk_index=chunk_index,
                 content_type="pdf_book_chunk",
                 page=None,
                 source=doc.source_uri,

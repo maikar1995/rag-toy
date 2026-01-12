@@ -5,7 +5,7 @@ from .base import Chunker, ChunkerConfig
 from ...models import Document
 
 
-def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = None) -> Chunker:
+def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = None, **chunker_kwargs) -> Chunker:
     """
     Factory function to get appropriate chunker instance.
     
@@ -13,6 +13,7 @@ def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = No
         engine: Chunking engine ('native', 'langchain', 'llamaindex')
         doc_type: Document type ('pdf', 'web', etc.)
         config: Optional chunking configuration
+        **chunker_kwargs: Additional chunker-specific configuration parameters
         
     Returns:
         Chunker instance
@@ -36,46 +37,47 @@ def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = No
     
     try:
         if engine == "native":
-            return _get_native_chunker(doc_type, config)
+            return _get_native_chunker(doc_type, config, **chunker_kwargs)
         elif engine == "langchain":
-            return _get_langchain_chunker(doc_type, config)
+            return _get_langchain_chunker(doc_type, config, **chunker_kwargs)
         elif engine == "llamaindex":
-            return _get_llamaindex_chunker(doc_type, config)
+            return _get_llamaindex_chunker(doc_type, config, **chunker_kwargs)
     except ImportError as e:
         raise ImportError(f"Failed to import {engine} chunker: {e}")
 
 
-def _get_native_chunker(doc_type: str, config: ChunkerConfig) -> Chunker:
+def _get_native_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwargs) -> Chunker:
     """Get native chunker implementation."""
     if doc_type == "pdf":
-        from .native.pdf_chunker import NativePDFChunker
-        return NativePDFChunker(config)
+        raise NotImplementedError("Native web chunker is not implemented yet.")
     elif doc_type == "web":
-        from .native.web_chunker import NativeWebChunker
-        return NativeWebChunker(config)
+        raise NotImplementedError("Native web chunker is not implemented yet.")
     else:
         raise ValueError(f"Native engine doesn't support doc_type: {doc_type}")
 
 
-def _get_langchain_chunker(doc_type: str, config: ChunkerConfig) -> Chunker:
+def _get_langchain_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwargs) -> Chunker:
     """Get LangChain chunker implementation."""
     if doc_type == "pdf":
         from .llamaindex.pdf_chunker import LangChainPDFChunker
-        return LangChainPDFChunker(config)
+        return LangChainPDFChunker(config, **chunker_kwargs)
     elif doc_type == "web":
-        from .langchain.web_chunker import LangChainWebChunker
-        return LangChainWebChunker(config)
+        raise NotImplementedError("LangChain web chunker is not implemented yet.")
     else:
         raise ValueError(f"LangChain engine doesn't support doc_type: {doc_type}")
 
 
-def _get_llamaindex_chunker(doc_type: str, config: ChunkerConfig) -> Chunker:
+def _get_llamaindex_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwargs) -> Chunker:
     """Get LlamaIndex chunker implementation."""
     if doc_type == "pdf_book":
         from .llamaindex.pdf_chunker import LlamaIndexPDFChunker
+        # Use chunker_kwargs if provided, otherwise fallback to config attributes or defaults
+        chunk_sizes = chunker_kwargs.get('chunk_sizes') or getattr(config, 'chunk_sizes', None)
+        chunk_overlap = chunker_kwargs.get('chunk_overlap') or getattr(config, 'chunk_overlap', 20)
+        
         return LlamaIndexPDFChunker(
-            chunk_sizes=getattr(config, 'chunk_sizes', None),
-            chunk_overlap=getattr(config, 'chunk_overlap', 20)
+            chunk_sizes=chunk_sizes,
+            chunk_overlap=chunk_overlap
         )
     else:
         raise ValueError(f"LlamaIndex engine doesn't support doc_type: {doc_type}")

@@ -33,4 +33,5 @@ dev = [
     "llama-index-readers-file>=0.5.6",
     "llama-index-vector-stores-azureaisearch>=0.4.4",
     "openai>=2.14.0",
+    "unstructured[pdf]>=0.18.27",
 ]

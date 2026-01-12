@@ -21,7 +21,10 @@ def main():
     # Run ingestion with environment config
     summary = run_ingestion_with_env(
         data_paths=data_paths,
-        chunk_engine="llamaindex"  # or "langchain", "llamaindex"
+        chunk_engine="llamaindex",  # or "langchain", "llamaindex"
+        chunker_kwargs={
+            "chunk_sizes": [1024]
+        }
     )
     
     # Print results
