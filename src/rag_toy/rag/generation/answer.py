@@ -39,6 +39,7 @@ class AnswerGenerator:
         self,
         openai_client: Optional[AzureOpenAI] = None,
         model_deployment: Optional[str] = None,
+        search_type: str = "hybrid",
         temperature: float = 0.1,
         max_tokens: int = 1000
     ):
@@ -55,33 +56,24 @@ class AnswerGenerator:
         self.model_deployment = model_deployment or self._get_model_deployment()
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.search_type = search_type
         
         logging.info(f"✅ AnswerGenerator initialized: model={self.model_deployment}, temp={temperature}")
     
     def _create_openai_client(self) -> AzureOpenAI:
         """Create Azure OpenAI client for generation."""
-        # Use same config as embeddings but potentially different deployment
-        endpoint = os.getenv('GENERATION_1_ENDPOINT') or os.getenv('EMBEDDING_1_ENDPOINT')
-        api_key = os.getenv('GENERATION_1_API_KEY') or os.getenv('EMBEDDING_1_API_KEY')
-        api_version = os.getenv('GENERATION_1_API_VERSION') or os.getenv('EMBEDDING_1_API_VERSION', '2024-02-01')
-        
-        if not endpoint or not api_key:
-            raise ValueError("Missing generation model credentials in environment")
-        
+        api_key = os.environ["LLM_API_KEY"]
+        azure_endpoint = os.environ["LLM_AZURE_ENDPOINT"]
+        api_version = "2024-02-15-preview"
         return AzureOpenAI(
-            azure_endpoint=endpoint,
             api_key=api_key,
-            api_version=api_version
+            azure_endpoint=azure_endpoint,
+            api_version=api_version,
         )
     
     def _get_model_deployment(self) -> str:
         """Get model deployment name from environment."""
-        deployment = (
-            os.getenv('GENERATION_1_DEPLOYMENT') or 
-            os.getenv('GENERATION_1_MODEL_NAME') or
-            'gpt-4'  # Default fallback
-        )
-        return deployment
+        return os.environ["LLM_MODEL_NAME"]
     
     def _build_structured_context(self, results: List[SearchResult]) -> str:
         """
@@ -303,8 +295,7 @@ RESPONSE (valid JSON only):"""
     def generate(
         self, 
         query: str, 
-        search_results: List[SearchResult],
-        search_type: str = "hybrid"
+        search_results: List[SearchResult]
     ) -> AnswerResponse:
         """
         Generate answer with citations and confidence scoring.
@@ -319,7 +310,8 @@ RESPONSE (valid JSON only):"""
         """
         logging.info(f"🤖 Generating answer for query: '{query[:50]}...'")
         logging.debug(f"Using {len(search_results)} search results")
-        
+        search_type = self.search_type        
+
         try:
             # Build structured context
             context = self._build_structured_context(search_results)

@@ -78,8 +78,8 @@ class Retriever:
         search_client: Optional[SearchClient] = None,
         openai_client: Optional[AzureOpenAI] = None,
         index_name: Optional[str] = None,
-        default_top_k: int = 5,
-        default_search_type: str = "hybrid"
+        default_search_type: str = "hybrid",
+        default_top_k: int = 5
     ):
         """
         Initialize the retriever.
@@ -89,11 +89,9 @@ class Retriever:
             openai_client: Azure OpenAI client (optional, will create if None)
             index_name: Search index name (optional, will load from env)
             default_top_k: Default number of results to return
-            default_search_type: Default search strategy ("vector" or "hybrid")
         """
         self.default_top_k = default_top_k
-        self.default_search_type = default_search_type
-        
+        self.search_type = default_search_type
         # Initialize clients
         self.search_client = search_client or self._create_search_client(index_name)
         self.openai_client = openai_client or self._create_openai_client()
@@ -104,7 +102,7 @@ class Retriever:
             raise ValueError("Missing EMBEDDING_1_DEPLOYMENT or EMBEDDING_1_MODEL_NAME in environment")
         
         logging.info(f"✅ Retriever initialized: index={self.search_client._index_name}, "
-                    f"deployment={self.embedding_deployment}, default_search_type={default_search_type}")
+                    f"deployment={self.embedding_deployment}, search_type={self.search_type}")
     
     def _create_search_client(self, index_name: Optional[str] = None) -> SearchClient:
         """Create Azure Search client from environment config."""
@@ -283,6 +281,8 @@ class Retriever:
         odata_filter: Optional[str]
     ) -> List[Dict[str, Any]]:
         """Perform vector-only search."""
+
+        logging.info("Performing vector search")
         
         vector_query = VectorizedQuery(
             vector=query_vector,
@@ -300,7 +300,7 @@ class Retriever:
         
         return list(search_results)
     
-    def _hybrid_search(
+    def __hybrid_search(
         self,
         query_text: str,
         query_vector: List[float],
@@ -327,6 +327,38 @@ class Retriever:
         
         return list(search_results)
     
+    def _hybrid_search(
+        self,
+        query_text: str,
+        query_vector: List[float],
+        top_k: int,
+        odata_filter: Optional[str]
+    ) -> List[Dict[str, Any]]:
+        """Perform hybrid search (vector + keyword with RRF)."""
+        
+        logging.info("Performing hybrid search")
+        vector_k = max(top_k * 5, 30)
+
+        vector_query = VectorizedQuery(
+            vector=query_vector,
+            k=50,
+            fields="contentVector"
+        )
+        
+        search_results = self.search_client.search(
+            search_text=query_text,
+            vector_queries=[vector_query],
+            select=["id", "content", "doc_id", "page", "source_uri", "content_type", "node_id", "node_type", "parent_path"],
+            filter=odata_filter,
+            top=50,
+            query_type="semantic",  # Enable semantic search for better keyword matching
+            semantic_configuration_name="default"
+        )
+
+        results = list(search_results)[:top_k]
+
+        return results
+    
     def search_dict(
         self,
         query: str,
@@ -349,7 +381,7 @@ class Retriever:
 def create_retriever(
     index_name: Optional[str] = None,
     default_top_k: int = 5,
-    default_search_type: str = "hybrid"
+    search_type: str = "hybrid"
 ) -> Retriever:
     """
     Factory function to create a Retriever with default configuration.
@@ -365,7 +397,6 @@ def create_retriever(
     return Retriever(
         index_name=index_name,
         default_top_k=default_top_k,
-        default_search_type=default_search_type
     )
 
 

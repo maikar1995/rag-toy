@@ -12,12 +12,13 @@ def abstain(reason: str) -> Optional[AnswerResponse]:
     return None
 
 class RAGService:
-    def __init__(self, retriever: Retriever, answer_generator: AnswerGenerator):
+    def __init__(self, retriever: Retriever, answer_generator: AnswerGenerator, search_type: str = "vector"):
         self.retriever = retriever
         self.answer_generator = answer_generator
+        self.search_type = search_type
 
     async def ask(self, query: str, top_k: int = 5) -> Optional[AnswerResponse]:
-        citations: List[Citation] = self.retriever.retrieve(query, top_k=top_k)
+        citations: List[Citation] = self.retriever.retrieve(query, top_k=top_k, search_type=self.search_type)
         if not citations:
             return abstain("no_evidence")
 

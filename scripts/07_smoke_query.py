@@ -1,5 +1,8 @@
 import asyncio
+import logging
 from rag_toy.api.deps import get_rag_service
+
+logging.basicConfig(level=logging.INFO)
 
 q_1 = "Según el Exhibit 2, ¿qué razones se dan para afirmar que los cerdos son hermosos?"
 q_2 = "¿Cuál es la opinión de Minto sobre el uso de tipografía Comic Sans en informes profesionales?"
@@ -10,9 +13,22 @@ q_6 = "¿Qué justificación da el libro para empezar por el key message antes q
 
 
 async def main():
-    svc = get_rag_service()
+    svc = get_rag_service(search_type="hybrid")
     res = await svc.ask(q_6)
     print(res)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    from rag_toy.rag.retrieval.retrieve import Retriever
+    from rag_toy.rag.generation.answer import AnswerGenerator
+
+
+    index_name = "rag-toy-native-v1"
+
+    # retriever = Retriever(index_name=index_name)
+    retriever = Retriever()
+    answer_generator = AnswerGenerator()
+
+    results = retriever.retrieve(q_6, search_type="hybrid")
+    answer = answer_generator.generate(q_6, results)
+    print(answer)
+    # asyncio.run(main())
