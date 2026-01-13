@@ -8,6 +8,8 @@ from pathlib import Path
 
 from src.rag_toy.rag.ingestion.orchestrator import run_ingestion_with_env
 
+PDF_LLAMAPARSE_PATH = "data/input/Inf.2_WG.1_2013_Outcome_of_the_Communication_survey_01.pdf"
+
 def main():
     logging.basicConfig(level=logging.INFO)
     
@@ -15,16 +17,17 @@ def main():
     data_paths = {
         # "pdf": "data/processed/pdf_pages.jsonl",
         # "web": "data/processed/web_docs.jsonl",
-        "pdf_book": "data/input/_OceanofPDF.com_The_Minto_Pyramid_Principle_-_Barbara_Minto.pdf"
+        # "pdf_book": "data/input/_OceanofPDF.com_The_Minto_Pyramid_Principle_-_Barbara_Minto.pdf"
+        "pdf_llamaparse": PDF_LLAMAPARSE_PATH
     }
     
     # Run ingestion with environment config
     summary = run_ingestion_with_env(
         data_paths=data_paths,
         chunk_engine="llamaindex",  # or "langchain", "llamaindex"
-        chunker_kwargs={
-            "chunk_sizes": [1024]
-        }
+        # chunker_kwargs={
+        #     "chunk_sizes": [1024]
+        # }
     )
     
     # Print results

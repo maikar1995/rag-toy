@@ -274,7 +274,7 @@ class IngestionOrchestrator:
         errors = []
         
         # Validate chunk engine
-        supported_engines = {"native", "langchain", "llamaindex"}
+        supported_engines = {"native", "langchain", "llamaindex", "llamaparse"}
         if chunk_engine not in supported_engines:
             errors.append(f"Unsupported chunk engine: {chunk_engine}. Supported: {sorted(supported_engines)}")
         
@@ -295,7 +295,7 @@ class IngestionOrchestrator:
         
         for source_type, file_path in data_paths.items():
             # Check if source type is supported
-            supported_sources = {"pdf", "web", "pdf_book"}
+            supported_sources = {"pdf", "web", "pdf_book", "pdf_llamaparse"}
             if source_type not in supported_sources:
                 errors.append(f"Unsupported source type: {source_type}. Supported: {sorted(supported_sources)}")
             
@@ -396,4 +396,3 @@ if __name__ == "__main__":
         data_paths=data_paths,
         chunk_engine="native"  # or "langchain", "llamaindex"
     )
-    

@@ -1,7 +1,9 @@
 """Document loaders for various source types."""
 
 from .base import DocumentLoader
+
 from .pdf_loader import PDFLoader
+from .llamaparse_pdf_loader import LlamaParsePDFLoader
 
 from .web_loader import WebLoader
 from .pdf_book_loader import PDFBookLoader
@@ -10,7 +12,8 @@ from .pdf_book_loader import PDFBookLoader
 _LOADERS = {
     "pdf": PDFLoader,
     "web": WebLoader,
-    "pdf_book": PDFBookLoader
+    "pdf_book": PDFBookLoader,
+    "pdf_llamaparse": LlamaParsePDFLoader
 }
 
 
@@ -38,6 +41,7 @@ def get_loader(source_type: str) -> DocumentLoader:
 __all__ = [
     "DocumentLoader",
     "PDFLoader",
+    "LlamaParsePDFLoader",
     "WebLoader",
     "PDFBookLoader",
     "get_loader"

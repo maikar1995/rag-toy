@@ -26,15 +26,15 @@ def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = No
         config = ChunkerConfig()
         
     # Validate engine
-    supported_engines = ["native", "langchain", "llamaindex"]
+    supported_engines = ["native", "langchain", "llamaindex", "llamaparse"]
     if engine not in supported_engines:
         raise ValueError(f"Unsupported engine: {engine}. Supported engines: {supported_engines}")
-        
+
     # Validate document type  
-    supported_doc_types = ["pdf", "web", "pdf_book"]
+    supported_doc_types = ["pdf", "web", "pdf_book", "pdf_llamaparse"]
     if doc_type not in supported_doc_types:
         raise ValueError(f"Unsupported document type: {doc_type}. Supported types: {supported_doc_types}")
-    
+
     try:
         if engine == "native":
             return _get_native_chunker(doc_type, config, **chunker_kwargs)
@@ -42,6 +42,8 @@ def get_chunker(engine: str, doc_type: str, config: Optional[ChunkerConfig] = No
             return _get_langchain_chunker(doc_type, config, **chunker_kwargs)
         elif engine == "llamaindex":
             return _get_llamaindex_chunker(doc_type, config, **chunker_kwargs)
+        elif engine == "llamaparse":
+            return _get_llamaparse_chunker(doc_type, config, **chunker_kwargs)
     except ImportError as e:
         raise ImportError(f"Failed to import {engine} chunker: {e}")
 
@@ -81,3 +83,12 @@ def _get_llamaindex_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwar
         )
     else:
         raise ValueError(f"LlamaIndex engine doesn't support doc_type: {doc_type}")
+
+
+def _get_llamaparse_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwargs) -> Chunker:
+    """Get LlamaParse chunker implementation."""
+    if doc_type == "pdf_llamaparse":
+        from .llamaparse_pdf_chunker import LlamaParsePDFChunker
+        return LlamaParsePDFChunker()
+    else:
+        raise ValueError(f"LlamaParse engine doesn't support doc_type: {doc_type}")
