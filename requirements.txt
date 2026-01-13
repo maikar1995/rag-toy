@@ -3,3 +3,4 @@ azure-search-documents
 fastapi
 unstructured[pdf]
 unstructured
+# ! brew install ghostscript

@@ -10,11 +10,13 @@ q_3 = "Explícame la diferencia entre deductive e inductive grouping en la Pyram
 q_4 = "Enumera los pasos para construir una pirámide desde el mensaje principal hasta los supporting points, en orden, y explica cada paso con una frase."
 q_5 = "Resume las reglas MECE que menciona el libro y dame un ejemplo de mala agrupación y cómo corregirla."
 q_6 = "¿Qué justificación da el libro para empezar por el key message antes que por los detalles? Responde con 2 razones y apóyalas con el texto."
+q_7 = "Which is the country more satisfied with the communications about the Convention and the Protocol?"
+q_8 = "What best describes your impressions of communications about the Convention and the Protocol?"
 
-
+q = q_8
 async def main():
     svc = get_rag_service(search_type="hybrid")
-    res = await svc.ask(q_6)
+    res = await svc.ask(q)
     print(res)
 
 if __name__ == "__main__":
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     retriever = Retriever()
     answer_generator = AnswerGenerator()
 
-    results = retriever.retrieve(q_6, search_type="hybrid")
-    answer = answer_generator.generate(q_6, results)
+    results = retriever.retrieve(q, search_type="hybrid")
+    answer = answer_generator.generate(q, results)
     print(answer)
     # asyncio.run(main())

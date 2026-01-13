@@ -1,6 +1,7 @@
 """PDF document loader using LlamaParse for advanced parsing (tables, charts, captions)."""
 
 import logging
+import os
 from pathlib import Path
 from typing import Iterator
 
@@ -19,6 +20,7 @@ class LlamaParsePDFLoader:
         Yields:
             Document objects with content_type in {"pdf_text", "pdf_table", "figure_caption"}
         """
+        file_path = Path(file_path)  # Ensure file_path is a Path object
         try:
             from llama_parse import LlamaParse
             from llama_index.readers.pdf_table import PDFTableReader 
@@ -29,8 +31,9 @@ class LlamaParsePDFLoader:
         # 1. Parse with LlamaParse (text, tables, captions)
         parser = LlamaParse(
             result_type="markdown",
+            api_key=os.environ["LLAMA_API_KEY"],
             use_vendor_multimodal_model=True,
-            parsing_instruction=(
+            system_prompt_append=(
                 "Extrae todo el contenido del PDF. "
                 "Cuando haya tablas o gráficos, conviértelos a tablas Markdown "
                 "con encabezados claros y unidades si aparecen en el eje."
@@ -40,7 +43,7 @@ class LlamaParsePDFLoader:
 
         # 2. (Optional) Extract tables with PDFTableReader
         table_reader = PDFTableReader()
-        table_docs = table_reader.load(file=str(file_path))
+        table_docs = table_reader.load_data(file=str(file_path))
 
         # 3. Combine and yield as Document objects
         all_docs = []

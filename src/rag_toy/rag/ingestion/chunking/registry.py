@@ -81,6 +81,9 @@ def _get_llamaindex_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwar
             chunk_sizes=chunk_sizes,
             chunk_overlap=chunk_overlap
         )
+    if doc_type == "pdf_llamaparse":
+        from .llamaindex.llamaparse_pdf_chunker import LlamaParsePDFChunker
+        return LlamaParsePDFChunker()
     else:
         raise ValueError(f"LlamaIndex engine doesn't support doc_type: {doc_type}")
 
@@ -88,7 +91,7 @@ def _get_llamaindex_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwar
 def _get_llamaparse_chunker(doc_type: str, config: ChunkerConfig, **chunker_kwargs) -> Chunker:
     """Get LlamaParse chunker implementation."""
     if doc_type == "pdf_llamaparse":
-        from .llamaparse_pdf_chunker import LlamaParsePDFChunker
+        from .llamaindex.llamaparse_pdf_chunker import LlamaParsePDFChunker
         return LlamaParsePDFChunker()
     else:
         raise ValueError(f"LlamaParse engine doesn't support doc_type: {doc_type}")

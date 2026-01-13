@@ -1,11 +1,11 @@
 """Chunker for LlamaParse PDF loader: 1 table = 1 chunk, text/caption atomic, correct content_type."""
 from typing import Iterator, List, Optional
 import uuid
-from ...models import Document, Chunk
-from .base import Chunker, ChunkerConfig
+from ....models import Document, Chunk
+from ..base import Chunker, ChunkerConfig
 
 class LlamaParsePDFChunker(Chunker):
-    engine = "llamaparse"
+    engine = "llamaindex"
     doc_type = "pdf_llamaparse"
     version = "v1"
 
